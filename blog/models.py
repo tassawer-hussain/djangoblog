@@ -2,6 +2,10 @@ from django.db import models
 from django.utils import timezone
 from django.conf import settings # use for user model in author field
 
+class PublishedManager(models.Manager):
+	def get_queryset(self):
+		return super().get_queryset().filter(status=Post.Status.PUBLISHED) # return all published posts
+
 # Create your models here.
 class Post(models.Model):
 
@@ -25,6 +29,9 @@ class Post(models.Model):
 		related_name='blog_posts'
 		)
 
+	objects = models.Manager() # default manager
+	published = PublishedManager() # custom manager
+
 	class Meta:
 		ordering = ['-publish']
 		indexes = [
@@ -34,6 +41,8 @@ class Post(models.Model):
 
 	def __str__(self):
 		return self.title
+
+
 
 '''
 Create and save post using python shell
@@ -184,4 +193,15 @@ starts_why = Q(title__istartswith="why")
 Post.objects.filter(starts_who | starts_why)	-	Return all posts that start with "who" or "why" in the title
 Post.objects.filter(starts_who & starts_why)	-	Return all posts that start with "who" and "why" in the title
 Post.objects.filter(starts_who ^ starts_why)	-	Return all posts that start with "who" or "why" in the title but not both
+
+
+##########
+## Usage of custom managers
+from blog.models import Post
+Post.objects.all()	#	Return all posts
+Post.published.all()	#	Return all published posts
+Post.published.filter(title__startswith="Hello")	#	Return all published posts that start with "Hello" in the title
+Post.published.filter(title__startswith="Hello").count()	#	Return the number of published posts that start with "Hello" in the title
+Post.published.filter(title__startswith="Hello").delete()	#	Delete all published posts that start with "Hello" in the title
+Post.published.filter(title__startswith="Hello").update(title="New title")	#	Update all published posts that start with "Hello" in the title to "New title"
 '''
